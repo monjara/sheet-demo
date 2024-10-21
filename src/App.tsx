@@ -2,7 +2,10 @@ import './App.css'
 import { Link, Navigate, Outlet, useLocation } from 'react-router-dom'
 
 function App() {
-  const routes = [{ to: 'spreadsheet', label: 'SpreadSheet' }]
+  const routes = [
+    { to: 'spreadsheet', label: 'SpreadSheet' },
+    { to: 'data_grid', label: 'DataGrid' },
+  ]
   const location = useLocation()
   if (location.pathname === '/') {
     return <Navigate to='/spreadsheet' replace />
@@ -11,13 +14,11 @@ function App() {
   return (
     <div className='app'>
       <div className='side_bar'>
-        <ul>
-          {routes.map((route) => (
-            <Link key={route.to} to={route.to}>
-              {route.label}
-            </Link>
-          ))}
-        </ul>
+        {routes.map((route) => (
+          <Link key={route.to} to={route.to}>
+            {route.label}
+          </Link>
+        ))}
       </div>
       <div>
         <Outlet />

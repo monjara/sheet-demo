@@ -4,10 +4,12 @@
 }
 
 .side_bar {
-  width: 30%;
+  width: 14rem;
   height: 100%;
   top: 0;
   left: 0;
   font-size: 1.5rem;
   margin: 20px;
+  display: flex;
+  flex-direction: column;
 }
