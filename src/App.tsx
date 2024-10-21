@@ -1,79 +1,28 @@
-import { useState } from 'react'
-import Spreadsheet, { type CellBase, type Matrix } from 'react-spreadsheet'
 import './App.css'
+import { Link, Navigate, Outlet, useLocation } from 'react-router-dom'
 
 function App() {
-  const [data, setData] = useState<Matrix<CellBase<string | number>>>([
-    [
-      { value: 'Vanilla' },
-      { value: 'Chocolate' },
-      { value: 'Strawberry' },
-      { value: 'Cookies' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-      { value: '' },
-    ],
-    [{ value: 'Strawberry' }, { value: 'Cookies' }],
-    [{ value: 'Strawberry' }, { value: 'Cookies' }],
-    [{ value: 'Strawberry' }, { value: 'Cookies' }],
-    [{ value: 'Strawberry' }, { value: 'Cookies' }],
-    [{ value: 'Strawberry' }, { value: 'Cookies' }],
-    [{ value: 'Strawberry' }, { value: 'Cookies' }],
-    [{ value: 'Strawberry' }, { value: 'Cookies' }],
-    [{ value: 'Strawberry' }, { value: 'Cookies' }],
-    [{ value: 'Strawberry' }, { value: 'Cookies' }],
-    [{ value: 'Strawberry' }, { value: 'Cookies' }],
-    [{ value: 'Strawberry' }, { value: 'Cookies' }],
-    [{ value: 'Strawberry' }, { value: 'Cookies' }],
-    [{ value: 'Strawberry' }, { value: 'Cookies' }],
-    [{ value: 'Strawberry' }, { value: 'Cookies' }],
-    [{ value: 'Strawberry' }, { value: 'Cookies' }],
-    [],
-  ])
+  const routes = [{ to: 'spreadsheet', label: 'SpreadSheet' }]
+  const location = useLocation()
+  if (location.pathname === '/') {
+    return <Navigate to='/spreadsheet' replace />
+  }
+
   return (
-    <>
-      <h1>React SpreadSheet</h1>
-      <Spreadsheet data={data} onChange={setData} />
-    </>
+    <div className='app'>
+      <div className='side_bar'>
+        <ul>
+          {routes.map((route) => (
+            <Link key={route.to} to={route.to}>
+              {route.label}
+            </Link>
+          ))}
+        </ul>
+      </div>
+      <div>
+        <Outlet />
+      </div>
+    </div>
   )
 }
 
