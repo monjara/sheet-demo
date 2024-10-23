@@ -5,6 +5,7 @@ function App() {
   const routes = [
     { to: 'spreadsheet', label: 'SpreadSheet' },
     { to: 'data_grid', label: 'DataGrid' },
+    { to: 'canvas_datagrid', label: 'CanvasDataGrid' },
   ]
   const location = useLocation()
   if (location.pathname === '/') {

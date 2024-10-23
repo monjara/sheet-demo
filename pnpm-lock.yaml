@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      canvas-datagrid:
+        specifier: ^0.4.7
+        version: 0.4.7
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -504,6 +507,9 @@ packages:
   caniuse-lite@1.0.30001669:
     resolution: {integrity: sha512-DlWzFDJqstqtIVx1zeSpIMLjunf5SmwOw0N2Ck/QSQdS8PLS4+9HrLaYei4w8BIAL7IB/UEDu889d8vhCTPA0w==}
 
+  canvas-datagrid@0.4.7:
+    resolution: {integrity: sha512-kEfC5uVWWSotY9Y3FgNBp7K5SNwLMXnsmmK+kVKv/MDhgZ0LYfIwy6I5X0Sx8Bqbv1Hv8BOm5BeERsE1ZiSSeg==}
+
   chalk@2.4.2:
     resolution: {integrity: sha512-Mti+f9lpJNcwF4tWV8/OrTTtF1gZi+f8FqlyAdouralcFWFQWF2+NgCHShjkCb+IFBLq9buZwE1xckQU4peSuQ==}
     engines: {node: '>=4'}
@@ -710,6 +716,9 @@ packages:
   is-number-object@1.0.7:
     resolution: {integrity: sha512-k1U0IRzLMo7ZlYIfzRu23Oh6MiIFasgpb9X76eqfFZAqwH44UI4KTBvBYIZ1dSL9ZzChTB9ShHfLkR4pdW5krQ==}
     engines: {node: '>= 0.4'}
+
+  is-printable-key-event@1.0.0:
+    resolution: {integrity: sha512-C/GJ8ApSdY6/RGQrSSkBzuWDtYI9/mOTRLCOu/5iYH46pI7Ki6y6B71kPL7OWRzqv9KkWSEmskKdq5IvgAGPHA==}
 
   is-regex@1.1.4:
     resolution: {integrity: sha512-kvRdxDsxZjhzUX07ZnLydzS1TU/TJlTUHHY4YLL87e37oUA49DfkLqgy+VjFocowy29cKvcSiu+kIv728jTTVg==}
@@ -1378,6 +1387,10 @@ snapshots:
 
   caniuse-lite@1.0.30001669: {}
 
+  canvas-datagrid@0.4.7:
+    dependencies:
+      is-printable-key-event: 1.0.0
+
   chalk@2.4.2:
     dependencies:
       ansi-styles: 3.2.1
@@ -1652,6 +1665,8 @@ snapshots:
   is-number-object@1.0.7:
     dependencies:
       has-tostringtag: 1.0.2
+
+  is-printable-key-event@1.0.0: {}
 
   is-regex@1.1.4:
     dependencies:

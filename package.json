@@ -12,6 +12,7 @@
     "check": "biome check --write src"
   },
   "dependencies": {
+    "canvas-datagrid": "^0.4.7",
     "react": "^18.3.1",
     "react-data-grid": "7.0.0-beta.47",
     "react-dom": "^18.3.1",
