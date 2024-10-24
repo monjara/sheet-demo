@@ -14,8 +14,6 @@
   "dependencies": {
     "@faker-js/faker": "^9.0.3",
     "@rowsncolumns/grid": "^9.0.4",
-    "@tanstack/react-virtual": "^3.10.8",
-    "canvas-datagrid": "^0.4.7",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0",
