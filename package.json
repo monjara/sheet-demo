@@ -12,13 +12,14 @@
     "check": "biome check --write src"
   },
   "dependencies": {
+    "@faker-js/faker": "^9.0.3",
+    "@rowsncolumns/grid": "^9.0.4",
+    "@tanstack/react-virtual": "^3.10.8",
     "canvas-datagrid": "^0.4.7",
     "react": "^18.3.1",
-    "react-data-grid": "7.0.0-beta.47",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.27.0",
-    "react-spreadsheet": "^0.9.5",
-    "scheduler": "^0.23.2"
+    "zustand": "^5.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
