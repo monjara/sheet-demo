@@ -196,11 +196,9 @@
 
 import {
   Cell,
-  type CellInterface,
   Grid,
   type GridRef,
   type RendererProps,
-  getBoundedCells,
   useCopyPaste,
   useEditable,
   useSelection,
@@ -208,11 +206,9 @@ import {
   useUndo,
 } from '@rowsncolumns/grid'
 // @ts-nocheck
-import React, { useRef, useState, useCallback, useEffect, memo } from 'react'
-import ReactDOM from 'react-dom'
-import { Group, Rect, Text } from 'react-konva'
+import { useCallback, useRef, useState } from 'react'
 
-function number2Alpha(i) {
+function number2Alpha(i: number): string {
   return (
     (i >= 26 ? number2Alpha(((i / 26) >> 0) - 1) : '') +
     'abcdefghijklmnopqrstuvwxyz'[(i % 26) >> 0]
@@ -220,37 +216,38 @@ function number2Alpha(i) {
 }
 
 const Header = (props: RendererProps) => {
-  const {
-    x,
-    y,
-    width,
-    height,
-    rowIndex,
-    columnIndex,
-    value,
-    columnHeader,
-    isActive,
-  } = props
+  const { rowIndex, columnIndex, columnHeader, isActive } = props
   const isCorner = rowIndex === columnIndex
   const text = isCorner
     ? ''
     : columnHeader
-      ? rowIndex
-      : number2Alpha(columnIndex - 1).toUpperCase()
+      ? (rowIndex as number)
+      : (number2Alpha(columnIndex - 1).toUpperCase() as string as string)
 
   const fill = isActive ? '#E9EAED' : '#F8F9FA'
+
   return (
-    <Cell {...props} value={text} fill={fill} stroke='#999' align='center' />
+    <Cell
+      {...props}
+      value={text as string}
+      fill={fill}
+      stroke='#999'
+      align='center'
+    />
   )
 }
 
-const Sheet = ({ data, onChange, name, isActive }) => {
-  const gridRef = useRef<GridRef>()
+type SheetProps = {
+  data: Record<string, string | number>
+}
+const Sheet = ({ data }: SheetProps) => {
+  const gridRef = useRef<GridRef>(null)
   const getValueRef = useRef()
   const rowCount = 1000
   const columnCount = 1000
   const getValue = useCallback(
-    ({ rowIndex, columnIndex }) => {
+    ({ rowIndex, columnIndex }: { rowIndex: number; columnIndex: number }) => {
+      // @ts-ignore
       return data[[rowIndex, columnIndex]]
     },
     [data]
@@ -263,6 +260,7 @@ const Sheet = ({ data, onChange, name, isActive }) => {
     setSelections,
     newSelection,
     ...selectionProps
+    // @ts-ignore
   } = useSelection({
     gridRef,
     rowCount,
@@ -279,8 +277,6 @@ const Sheet = ({ data, onChange, name, isActive }) => {
           previousChanges[[i, j]] = getValue({ rowIndex: i, columnIndex: j })
         }
       }
-
-      onChange(name, changes)
     },
   })
   const handleUndo = (patches) => {
@@ -291,13 +287,11 @@ const Sheet = ({ data, onChange, name, isActive }) => {
       const changes = {
         [[rowIndex, columnIndex]]: value,
       }
-      onChange(name, changes)
       setActiveCell({ rowIndex, columnIndex })
     }
 
     if (key === 'range') {
       const [_, cell] = path
-      onChange(name, value)
       setActiveCell(cell)
     }
   }
@@ -312,14 +306,13 @@ const Sheet = ({ data, onChange, name, isActive }) => {
     onUndo: handleUndo,
     onRedo: handleUndo,
   })
+  // @ts-ignore
   useCopyPaste({
     gridRef,
     selections,
     activeCell,
     getValue,
-    onPaste: (rows, activeCell) => {
-      console.log('rows: ', rows)
-      const { rowIndex, columnIndex } = activeCell
+    onPaste: (rows, { rowIndex, columnIndex }) => {
       const endRowIndex = Math.max(rowIndex, rowIndex + rows.length - 1)
       const endColumnIndex = Math.max(
         columnIndex,
@@ -327,23 +320,18 @@ const Sheet = ({ data, onChange, name, isActive }) => {
       )
       const changes = {}
       for (const [i, row] of rows.entries()) {
-        console.log('row: ', row)
         for (const [j, cell] of row.entries()) {
-          console.log('cell: ', cell)
           if (typeof cell !== 'object') {
             const text = cell
               .replace(/\n/g, '')
               .replace(/\r/g, '')
               .replace(/ /g, '')
-            console.log('text: ', text)
             changes[[rowIndex + i, columnIndex + j]] = text
           } else if (cell.text !== undefined) {
             changes[[rowIndex + i, columnIndex + j]] = cell.text
           }
         }
       }
-
-      onChange(name, changes)
 
       /* Should select */
       if (rowIndex === endRowIndex && columnIndex === endColumnIndex) return
@@ -367,10 +355,10 @@ const Sheet = ({ data, onChange, name, isActive }) => {
           changes[[i, j]] = undefined
         }
       }
-      onChange(name, changes)
     },
   })
 
+  // @ts-ignore
   const { editorComponent, isEditInProgress, ...editableProps } = useEditable({
     gridRef,
     getValue,
@@ -394,7 +382,6 @@ const Sheet = ({ data, onChange, name, isActive }) => {
           }
           return acc
         }, {})
-        onChange(name, newValues)
         gridRef.current.resetAfterIndices(
           {
             rowIndex: selections[0].bounds.top,
@@ -403,7 +390,6 @@ const Sheet = ({ data, onChange, name, isActive }) => {
           false
         )
       } else {
-        onChange(name, { [[activeCell.rowIndex, activeCell.columnIndex]]: '' })
         gridRef.current.resetAfterIndices(activeCell)
       }
     },
@@ -415,8 +401,9 @@ const Sheet = ({ data, onChange, name, isActive }) => {
       }
       const previousValue = getValueRef.current(cell)
 
-      onChange(name, changes)
-      gridRef.current.resetAfterIndices({ rowIndex, columnIndex }, false)
+      if (gridRef.current) {
+        gridRef.current.resetAfterIndices({ rowIndex, columnIndex }, false)
+      }
       //
       ///* Select the next cell */
       if (nextActiveCell?.rowIndex && nextActiveCell?.columnIndex) {
@@ -424,6 +411,7 @@ const Sheet = ({ data, onChange, name, isActive }) => {
       }
     },
   })
+  // @ts-ignore
   const autoSizerProps = useSizer({
     gridRef,
     getValue,
@@ -450,8 +438,8 @@ const Sheet = ({ data, onChange, name, isActive }) => {
       style={{
         flex: 1,
         minWidth: 0,
-        position: isActive ? 'relative' : 'absolute',
-        top: isActive ? 0 : -2000,
+        position: 'relative',
+        top: 0,
       }}
     >
       <Grid
@@ -528,51 +516,21 @@ const Sheet = ({ data, onChange, name, isActive }) => {
   )
 }
 
-const defaultSheets = [
-  {
-    name: 'Sheet 1',
-    cells: {
-      '1,1': 'Hello',
-      '1,2': 'World',
-      '1,3': '=SUM(2,2)',
-      '1,4': '=SUM(B2, 4)',
-      '2,2': 10,
-    },
+const sheet = {
+  name: 'Sheet 1',
+  cells: {
+    '1,1': 'Hello',
+    '1,2': 'World',
+    '1,3': '=SUM(2,2)',
+    '1,4': '=SUM(B2, 4)',
+    '2,2': 10,
   },
-]
+}
 export default function RowColumnsGrid() {
-  const [activeSheet, setActiveSheet] = useState(0)
-  const [sheets, setSheets] = useState(defaultSheets)
-  const handleChange = useCallback((name, changes) => {
-    setSheets((prev) => {
-      return prev.map((cur) => {
-        if (cur.name === name) {
-          return {
-            ...cur,
-            cells: {
-              ...cur.cells,
-              ...changes,
-            },
-          }
-        }
-        return cur
-      })
-    })
-  }, [])
   return (
     <div className='Container'>
       <div className='Container-Sheet'>
-        {sheets.map((sheet, i) => {
-          return (
-            <Sheet
-              isActive={i === activeSheet}
-              key={sheet.name}
-              data={sheet.cells}
-              name={sheet.name}
-              onChange={handleChange}
-            />
-          )
-        })}
+        <Sheet key={sheet.name} data={sheet.cells} />
       </div>
     </div>
   )
