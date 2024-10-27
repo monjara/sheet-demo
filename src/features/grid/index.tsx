@@ -1,172 +1,568 @@
-import Grid, {
+//import Grid, {
+//  Cell,
+//  useCopyPaste,
+//  useEditable,
+//  useSelection,
+//  useTouch,
+//  type CellInterface,
+//  type RendererProps,
+//} from '@rowsncolumns/grid'
+//import { useCallback, useMemo, useRef, useState } from 'react'
+//import { makeData, type Person } from '../../makeData'
+//
+//function renderCell({
+//  data,
+//  makeValue,
+//  ...props
+//}: RendererProps & {
+//  data: Person[]
+//  makeValue: (rowIndex: number, columnIndex: number) => string
+//}) {
+//  return (
+//    <Cell
+//      {...props}
+//      value={makeValue(props.columnIndex, props.rowIndex)}
+//      key={props.key}
+//      stroke='#ccc'
+//    />
+//  )
+//}
+//const order = [
+//  'firstName',
+//  'lastName',
+//  'age',
+//  'visits',
+//  'progress',
+//  'status',
+//  'createdAt',
+//  'param_1',
+//  'param_2',
+//  'param_3',
+//  'param_4',
+//  'param_5',
+//  'param_6',
+//  'param_7',
+//  'param_8',
+//  'param_9',
+//  'param_10',
+//  'param_11',
+//  'param_12',
+//  'param_13',
+//  'param_14',
+//  'param_15',
+//  'param_16',
+//  'param_17',
+//  'param_18',
+//  'param_19',
+//  'param_20',
+//  'param_21',
+//  'param_22',
+//  'param_23',
+//  'param_24',
+//  'param_25',
+//]
+//
+//function getValue(modified: string[][], cell: CellInterface) {
+//  return modified[cell.columnIndex][cell.rowIndex]
+//}
+//
+//export default function RowColumnsGrid() {
+//  const gridRef = useRef(null)
+//  const [data, _] = useState(() => makeData(10000))
+//  const rowCount = 230
+//  const columnCount = 10000
+//
+//  const modified = useMemo(() => {
+//    const retval: string[][] = []
+//    let i = 0
+//    for (const d of data) {
+//      retval[i] = []
+//      let j = 0
+//      for (const o of order) {
+//        retval[i][j] = d[o as keyof Person].toString()
+//        j++
+//      }
+//      i++
+//    }
+//    return retval
+//  }, [data])
+//
+//  const makeValue = useCallback(
+//    (columnIndex: number, rowIndex: number) => {
+//      return modified?.[columnIndex]?.[rowIndex] ?? ''
+//    },
+//    [modified]
+//  )
+//
+//  const {
+//    selections,
+//    setActiveCell,
+//    setSelections,
+//    newSelection,
+//    ...selectionProps
+//  } = useSelection({
+//    gridRef,
+//    rowCount,
+//    columnCount,
+//    allowDeselectSelection: true,
+//    onSelectionMove(from, to) {
+//      console.log('Selection move', from, to)
+//    },
+//    getValue: (cell: CellInterface) => getValue(modified, cell),
+//    onFill: (activeCell, fillSelection) => {
+//      console.log('Fill', activeCell, fillSelection)
+//      if (!fillSelection) return
+//      const { bounds } = fillSelection
+//      const changes = {}
+//      const previousChanges = {}
+//
+//      const value = getValue(modified, activeCell)
+//      for (let i = bounds.top; i <= bounds.bottom; i++) {
+//        for (let j = bounds.left; j <= bounds.right; j++) {
+//          // @ts-ignore
+//          changes[[i, j]] = value
+//          // @ts-ignore
+//          previousChanges[[i, j]] = getValue({ rowIndex: i, columnIndex: j })
+//        }
+//      }
+//      console.log('value: ', value)
+//    },
+//  })
+//
+//  // @ts-ignore
+//  const { editorComponent, editingCell, ...editableProps } = useEditable({
+//    gridRef,
+//    selections,
+//    columnCount,
+//    rowCount,
+//    getValue: (cell: CellInterface) => getValue(modified, cell),
+//    onSubmit: (value: string, cell: CellInterface) => {
+//      modified[cell.columnIndex][cell.rowIndex] = value
+//    },
+//  })
+//
+//  //@ts-ignore
+//  const copyPaste = useCopyPaste({
+//    selections,
+//    gridRef,
+//    //onCopy: (selections) => {
+//    //  console.log('onCopy', selections)
+//    //},
+//    onPaste: (rows, activeCell, selectionArea) => {
+//      console.log('activeCell: ', activeCell)
+//      modified[activeCell?.columnIndex as number][activeCell?.rowIndex as number] = rows[0]
+//    },
+//  })
+//  const touch = useTouch({
+//    gridRef,
+//  })
+//
+//  return (
+//    <div
+//      style={{
+//        position: 'relative',
+//      }}
+//    >
+//      <Grid
+//        ref={gridRef}
+//        selections={selections}
+//        rowCount={230}
+//        columnCount={10000}
+//        width={1000}
+//        height={600}
+//        rowHeight={() => 30}
+//        columnWidth={() => 100}
+//        itemRenderer={(props) => renderCell({ data, makeValue, ...props })}
+//        enableCellOverlay
+//        enableSelectionDrag
+//        {...selectionProps}
+//        {...copyPaste}
+//        {...editableProps}
+//        {...touch}
+//        onMouseDown={(...args) => {
+//          selectionProps.onMouseDown(...args)
+//          editableProps.onMouseDown(...args)
+//        }}
+//        onKeyDown={(...args) => {
+//          console.log('args: ', args)
+//          selectionProps.onKeyDown(...args)
+//          editableProps.onKeyDown(...args)
+//        }}
+//      />
+//      {editorComponent}
+//    </div>
+//  )
+//}
+
+// @ts-nocheck
+import React, { useRef, useState, useCallback, useEffect, memo } from 'react'
+import ReactDOM from 'react-dom'
+import {
   Cell,
-  useCopyPaste,
-  useEditable,
-  useSelection,
-  useTouch,
-  type CellInterface,
+  Grid,
   type RendererProps,
+  useSelection,
+  useEditable,
+  useCopyPaste,
+  useUndo,
+  useSizer,
+  type GridRef,
+  type CellInterface,
+  getBoundedCells,
 } from '@rowsncolumns/grid'
-import { useCallback, useMemo, useRef, useState } from 'react'
-import { makeData, type Person } from '../../makeData'
+import { Group, Rect, Text } from 'react-konva'
 
-function renderCell({
-  data,
-  makeValue,
-  ...props
-}: RendererProps & {
-  data: Person[]
-  makeValue: (rowIndex: number, columnIndex: number) => string
-}) {
+function number2Alpha(i) {
   return (
-    <Cell
-      {...props}
-      value={makeValue(props.columnIndex, props.rowIndex)}
-      key={props.key}
-      stroke='#ccc'
-    />
+    (i >= 26 ? number2Alpha(((i / 26) >> 0) - 1) : '') +
+    'abcdefghijklmnopqrstuvwxyz'[(i % 26) >> 0]
   )
 }
-const order = [
-  'firstName',
-  'lastName',
-  'age',
-  'visits',
-  'progress',
-  'status',
-  'createdAt',
-  'param_1',
-  'param_2',
-  'param_3',
-  'param_4',
-  'param_5',
-  'param_6',
-  'param_7',
-  'param_8',
-  'param_9',
-  'param_10',
-  'param_11',
-  'param_12',
-  'param_13',
-  'param_14',
-  'param_15',
-  'param_16',
-  'param_17',
-  'param_18',
-  'param_19',
-  'param_20',
-  'param_21',
-  'param_22',
-  'param_23',
-  'param_24',
-  'param_25',
-]
 
-function getValue(modified: string[][], cell: CellInterface) {
-  return modified[cell.columnIndex][cell.rowIndex]
+const Header = (props: RendererProps) => {
+  const {
+    x,
+    y,
+    width,
+    height,
+    rowIndex,
+    columnIndex,
+    value,
+    columnHeader,
+    isActive,
+  } = props
+  const isCorner = rowIndex === columnIndex
+  const text = isCorner
+    ? ''
+    : columnHeader
+      ? rowIndex
+      : number2Alpha(columnIndex - 1).toUpperCase()
+
+  const fill = isActive ? '#E9EAED' : '#F8F9FA'
+  return (
+    <Cell {...props} value={text} fill={fill} stroke='#999' align='center' />
+  )
 }
 
-export default function RowColumnsGrid() {
-  const gridRef = useRef(null)
-  const [data, _] = useState(() => makeData(10000))
-  const rowCount = 230
-  const columnCount = 10000
-
-  const modified = useMemo(() => {
-    const retval: string[][] = []
-    let i = 0
-    for (const d of data) {
-      retval[i] = []
-      let j = 0
-      for (const o of order) {
-        retval[i][j] = d[o as keyof Person].toString()
-        j++
-      }
-      i++
-    }
-    return retval
-  }, [data])
-
-  const makeValue = useCallback(
-    (columnIndex: number, rowIndex: number) => {
-      return modified?.[columnIndex]?.[rowIndex] ?? ''
+const Sheet = ({ data, onChange, name, isActive }) => {
+  const gridRef = useRef<GridRef>()
+  const getValueRef = useRef()
+  const rowCount = 1000
+  const columnCount = 1000
+  const getValue = useCallback(
+    ({ rowIndex, columnIndex }) => {
+      return data[[rowIndex, columnIndex]]
     },
-    [modified]
+    [data]
   )
-
-  const { selections, ...selectionProps } = useSelection({
+  getValueRef.current = getValue
+  const {
+    activeCell,
+    selections,
+    setActiveCell,
+    setSelections,
+    newSelection,
+    ...selectionProps
+  } = useSelection({
     gridRef,
     rowCount,
     columnCount,
-    allowDeselectSelection: true,
-    onSelectionMove(from, to) {
-      console.log('Selection move', from, to)
-    },
-    getValue: (cell: CellInterface) => getValue(modified, cell),
     onFill: (activeCell, fillSelection) => {
-      console.log('Fill', activeCell, fillSelection)
+      if (!fillSelection) return
+      const { bounds } = fillSelection
+      const changes = {}
+      const previousChanges = {}
+      const value = getValueRef.current(activeCell)
+      for (let i = bounds.top; i <= bounds.bottom; i++) {
+        for (let j = bounds.left; j <= bounds.right; j++) {
+          changes[[i, j]] = value
+          previousChanges[[i, j]] = getValue({ rowIndex: i, columnIndex: j })
+        }
+      }
+
+      onChange(name, changes)
+    },
+  })
+  const handleUndo = (patches) => {
+    const { path, value } = patches
+    const [key] = path
+    if (key === 'data') {
+      const [_, { rowIndex, columnIndex }] = path
+      const changes = {
+        [[rowIndex, columnIndex]]: value,
+      }
+      onChange(name, changes)
+      setActiveCell({ rowIndex, columnIndex })
+    }
+
+    if (key === 'range') {
+      const [_, cell] = path
+      onChange(name, value)
+      setActiveCell(cell)
+    }
+  }
+  const {
+    undo,
+    redo,
+    add: addToUndoStack,
+    canUndo,
+    canRedo,
+    ...undoProps
+  } = useUndo({
+    onUndo: handleUndo,
+    onRedo: handleUndo,
+  })
+  useCopyPaste({
+    gridRef,
+    selections,
+    activeCell,
+    getValue,
+    onPaste: (rows, activeCell) => {
+      const { rowIndex, columnIndex } = activeCell
+      const endRowIndex = Math.max(rowIndex, rowIndex + rows.length - 1)
+      const endColumnIndex = Math.max(
+        columnIndex,
+        columnIndex + (rows.length && rows[0].length - 1)
+      )
+      const changes = {}
+      for (const [i, row] of rows.entries()) {
+        for (const [j, cell] of row.entries()) {
+          console.log('cell: ', cell)
+          changes[[rowIndex + i, columnIndex + j]] = cell.text
+        }
+      }
+
+      onChange(name, changes)
+
+      /* Should select */
+      if (rowIndex === endRowIndex && columnIndex === endColumnIndex) return
+
+      setSelections([
+        {
+          bounds: {
+            top: rowIndex,
+            left: columnIndex,
+            bottom: endRowIndex,
+            right: endColumnIndex,
+          },
+        },
+      ])
+    },
+    onCut: (selection) => {
+      const { bounds } = selection
+      const changes = {}
+      for (let i = bounds.top; i <= bounds.bottom; i++) {
+        for (let j = bounds.left; j <= bounds.right; j++) {
+          changes[[i, j]] = undefined
+        }
+      }
+      onChange(name, changes)
     },
   })
 
-  // @ts-ignore
-  const { editorComponent, editingCell, ...editableProps } = useEditable({
+  const { editorComponent, isEditInProgress, ...editableProps } = useEditable({
     gridRef,
+    getValue,
     selections,
-    columnCount,
+    activeCell,
+    onDelete: (activeCell, selections) => {
+      /**
+       * It can be a range of just one cell
+       */
+      if (selections.length) {
+        const newValues = selections.reduce((acc, { bounds }) => {
+          for (let i = bounds.top; i <= bounds.bottom; i++) {
+            for (let j = bounds.left; j <= bounds.right; j++) {
+              if (
+                getValueRef.current({ rowIndex: i, columnIndex: j }) !==
+                undefined
+              ) {
+                acc[[i, j]] = ''
+              }
+            }
+          }
+          return acc
+        }, {})
+        onChange(name, newValues)
+        gridRef.current.resetAfterIndices(
+          {
+            rowIndex: selections[0].bounds.top,
+            columnIndex: selections[0].bounds.left,
+          },
+          false
+        )
+      } else {
+        onChange(name, { [[activeCell.rowIndex, activeCell.columnIndex]]: '' })
+        gridRef.current.resetAfterIndices(activeCell)
+      }
+    },
+    // TODO nextActiveCell has no rowindex...
+    onSubmit: (value, cell, nextActiveCell) => {
+      const { rowIndex, columnIndex } = cell
+      const changes = {
+        [[rowIndex, columnIndex]]: value,
+      }
+      const previousValue = getValueRef.current(cell)
+
+      onChange(name, changes)
+      gridRef.current.resetAfterIndices({ rowIndex, columnIndex }, false)
+      //
+      ///* Select the next cell */
+      if (nextActiveCell?.rowIndex && nextActiveCell?.columnIndex) {
+        setActiveCell(nextActiveCell)
+      }
+    },
+  })
+  const autoSizerProps = useSizer({
+    gridRef,
+    getValue,
+    resizeStrategy: 'full',
     rowCount,
-    getValue: (cell: CellInterface) => getValue(modified, cell),
-    onSubmit: (value: string, cell: CellInterface) => {
-      modified[cell.columnIndex][cell.rowIndex] = value
-    },
+    minColumnWidth: 100,
   })
-
-  //@ts-ignore
-  const copyPaste = useCopyPaste({
-    selections,
-    gridRef,
-    onCopy: (selections) => {
-      console.log('onCopy', selections)
+  const selectionArea = selections.reduce(
+    (acc, { bounds }) => {
+      for (let i = bounds.left; i <= bounds.right; i++) {
+        acc.cols.push(i)
+      }
+      for (let i = bounds.top; i <= bounds.bottom; i++) {
+        acc.rows.push(i)
+      }
+      return acc
     },
-    onPaste: (rows, activeCell, selectionArea) => {
-      console.log('onPaste', rows, activeCell, selectionArea)
-    },
-  })
-  const touch = useTouch({
-    gridRef,
-  })
-
+    { rows: [], cols: [] }
+  )
+  const frozenColumns = 1
+  const frozenRows = 1
   return (
     <div
       style={{
-        position: 'relative',
+        flex: 1,
+        minWidth: 0,
+        position: isActive ? 'relative' : 'absolute',
+        top: isActive ? 0 : -2000,
       }}
     >
       <Grid
+        // snap
+        showFillHandle={!isEditInProgress}
+        activeCell={activeCell}
+        width={1000}
+        height={1000}
         ref={gridRef}
         selections={selections}
-        rowCount={230}
-        columnCount={10000}
-        width={1000}
-        height={600}
-        rowHeight={() => 20}
-        columnWidth={() => 100}
-        itemRenderer={(props) => renderCell({ data, makeValue, ...props })}
-        enableCellOverlay
-        enableSelectionDrag
+        columnCount={columnCount}
+        rowCount={rowCount}
+        rowHeight={() => 22}
+        scrollThrottleTimeout={50}
+        itemRenderer={(props) => {
+          if (props.rowIndex < frozenRows) {
+            return (
+              <Header
+                {...props}
+                key={props.key}
+                isActive={
+                  (activeCell &&
+                    activeCell.columnIndex === props.columnIndex) ||
+                  selectionArea.cols.includes(props.columnIndex)
+                }
+              />
+            )
+          }
+          if (props.columnIndex < frozenColumns) {
+            return (
+              <Header
+                {...props}
+                key={props.key}
+                columnHeader
+                isActive={
+                  (activeCell && activeCell.rowIndex === props.rowIndex) ||
+                  selectionArea.rows.includes(props.rowIndex)
+                }
+              />
+            )
+          }
+          const value = data[[props.rowIndex, props.columnIndex]]
+          return (
+            <Cell
+              value={value}
+              fill='white'
+              stroke='#ccc'
+              {...props}
+              key={props.key}
+            />
+          )
+        }}
+        frozenColumns={frozenColumns}
+        frozenRows={frozenRows}
         {...selectionProps}
         {...editableProps}
-        {...touch}
+        {...autoSizerProps}
+        columnWidth={(columnIndex) => {
+          if (columnIndex === 0) return 46
+          return autoSizerProps.columnWidth(columnIndex)
+        }}
         onMouseDown={(...args) => {
           selectionProps.onMouseDown(...args)
           editableProps.onMouseDown(...args)
         }}
         onKeyDown={(...args) => {
-          console.log('args: ', args)
           selectionProps.onKeyDown(...args)
           editableProps.onKeyDown(...args)
+          undoProps.onKeyDown(...args)
         }}
       />
       {editorComponent}
+    </div>
+  )
+}
+
+const defaultSheets = [
+  {
+    name: 'Sheet 1',
+    cells: {
+      '1,1': 'Hello',
+      '1,2': 'World',
+      '1,3': '=SUM(2,2)',
+      '1,4': '=SUM(B2, 4)',
+      '2,2': 10,
+    },
+  },
+]
+export default function RowColumnsGrid() {
+  const [activeSheet, setActiveSheet] = useState(0)
+  const [sheets, setSheets] = useState(defaultSheets)
+  const handleChange = useCallback((name, changes) => {
+    setSheets((prev) => {
+      return prev.map((cur) => {
+        if (cur.name === name) {
+          return {
+            ...cur,
+            cells: {
+              ...cur.cells,
+              ...changes,
+            },
+          }
+        }
+        return cur
+      })
+    })
+  }, [])
+  return (
+    <div className='Container'>
+      <div className='Container-Sheet'>
+        {sheets.map((sheet, i) => {
+          return (
+            <Sheet
+              isActive={i === activeSheet}
+              key={sheet.name}
+              data={sheet.cells}
+              name={sheet.name}
+              onChange={handleChange}
+            />
+          )
+        })}
+      </div>
     </div>
   )
 }
