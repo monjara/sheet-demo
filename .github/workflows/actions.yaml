@@ -32,6 +32,8 @@ jobs:
           node-version: 18
       - name: Install pnpm
         run: npm install -g pnpm
+      - name: Install dependencies
+        run: pnpm install --prod
       - name: Build
         run: pnpm run build
       - name: Setup Pages
