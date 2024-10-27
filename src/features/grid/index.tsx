@@ -194,22 +194,22 @@
 //  )
 //}
 
+import {
+  Cell,
+  type CellInterface,
+  Grid,
+  type GridRef,
+  type RendererProps,
+  getBoundedCells,
+  useCopyPaste,
+  useEditable,
+  useSelection,
+  useSizer,
+  useUndo,
+} from '@rowsncolumns/grid'
 // @ts-nocheck
 import React, { useRef, useState, useCallback, useEffect, memo } from 'react'
 import ReactDOM from 'react-dom'
-import {
-  Cell,
-  Grid,
-  type RendererProps,
-  useSelection,
-  useEditable,
-  useCopyPaste,
-  useUndo,
-  useSizer,
-  type GridRef,
-  type CellInterface,
-  getBoundedCells,
-} from '@rowsncolumns/grid'
 import { Group, Rect, Text } from 'react-konva'
 
 function number2Alpha(i) {
@@ -318,6 +318,7 @@ const Sheet = ({ data, onChange, name, isActive }) => {
     activeCell,
     getValue,
     onPaste: (rows, activeCell) => {
+      console.log('rows: ', rows)
       const { rowIndex, columnIndex } = activeCell
       const endRowIndex = Math.max(rowIndex, rowIndex + rows.length - 1)
       const endColumnIndex = Math.max(
@@ -326,9 +327,19 @@ const Sheet = ({ data, onChange, name, isActive }) => {
       )
       const changes = {}
       for (const [i, row] of rows.entries()) {
+        console.log('row: ', row)
         for (const [j, cell] of row.entries()) {
           console.log('cell: ', cell)
-          changes[[rowIndex + i, columnIndex + j]] = cell.text
+          if (typeof cell !== 'object') {
+            const text = cell
+              .replace(/\n/g, '')
+              .replace(/\r/g, '')
+              .replace(/ /g, '')
+            console.log('text: ', text)
+            changes[[rowIndex + i, columnIndex + j]] = text
+          } else if (cell.text !== undefined) {
+            changes[[rowIndex + i, columnIndex + j]] = cell.text
+          }
         }
       }
 
