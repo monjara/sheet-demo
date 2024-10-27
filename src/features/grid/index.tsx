@@ -1,7 +1,9 @@
 import Grid, {
   Cell,
+  useCopyPaste,
   useEditable,
   useSelection,
+  useTouch,
   type CellInterface,
   type RendererProps,
 } from '@rowsncolumns/grid'
@@ -17,7 +19,12 @@ function renderCell({
   makeValue: (rowIndex: number, columnIndex: number) => string
 }) {
   return (
-    <Cell {...props} value={makeValue(props.columnIndex, props.rowIndex)} />
+    <Cell
+      {...props}
+      value={makeValue(props.columnIndex, props.rowIndex)}
+      key={props.key}
+      stroke='#ccc'
+    />
   )
 }
 const order = [
@@ -87,15 +94,22 @@ export default function RowColumnsGrid() {
     [modified]
   )
 
-  const { selections } = useSelection({
+  const { selections, ...selectionProps } = useSelection({
     gridRef,
     rowCount,
     columnCount,
+    allowDeselectSelection: true,
+    onSelectionMove(from, to) {
+      console.log('Selection move', from, to)
+    },
     getValue: (cell: CellInterface) => getValue(modified, cell),
+    onFill: (activeCell, fillSelection) => {
+      console.log('Fill', activeCell, fillSelection)
+    },
   })
 
   // @ts-ignore
-  const { editorComponent, ...editableProps } = useEditable({
+  const { editorComponent, editingCell, ...editableProps } = useEditable({
     gridRef,
     selections,
     columnCount,
@@ -104,6 +118,21 @@ export default function RowColumnsGrid() {
     onSubmit: (value: string, cell: CellInterface) => {
       modified[cell.columnIndex][cell.rowIndex] = value
     },
+  })
+
+  //@ts-ignore
+  const copyPaste = useCopyPaste({
+    selections,
+    gridRef,
+    onCopy: (selections) => {
+      console.log('onCopy', selections)
+    },
+    onPaste: (rows, activeCell, selectionArea) => {
+      console.log('onPaste', rows, activeCell, selectionArea)
+    },
+  })
+  const touch = useTouch({
+    gridRef,
   })
 
   return (
@@ -124,7 +153,18 @@ export default function RowColumnsGrid() {
         itemRenderer={(props) => renderCell({ data, makeValue, ...props })}
         enableCellOverlay
         enableSelectionDrag
+        {...selectionProps}
         {...editableProps}
+        {...touch}
+        onMouseDown={(...args) => {
+          selectionProps.onMouseDown(...args)
+          editableProps.onMouseDown(...args)
+        }}
+        onKeyDown={(...args) => {
+          console.log('args: ', args)
+          selectionProps.onKeyDown(...args)
+          editableProps.onKeyDown(...args)
+        }}
       />
       {editorComponent}
     </div>
