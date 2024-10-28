@@ -1,27 +1,25 @@
 import {
   Cell,
-  type CellInterface,
   Grid,
   type GridRef,
   useCopyPaste,
   useEditable,
   useSelection,
   useSizer,
-  useUndo,
 } from '@rowsncolumns/grid'
-// @ts-nocheck
-import { useCallback, useRef } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import useResizer from '../hooks/useResizer'
+import type { Pos } from '../type'
+import { pos2str } from '../utils'
 import Header from './Header'
 
 type SheetProps = {
   data: Record<string, string | number>
-  setCellValue: (position: CellInterface, value: string | number) => void
+  setCellValue: (position: Pos, value: string | number) => void
 }
 export default function Sheet({ data, setCellValue }: SheetProps) {
   const { width, height } = useResizer()
   const gridRef = useRef<GridRef>(null)
-  const getValueRef = useRef()
   const rowCount = 1000
   const columnCount = 1000
   const getValue = useCallback(
@@ -31,6 +29,7 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
     },
     [data]
   )
+  const getValueRef = useRef<typeof getValue | null>(null)
   getValueRef.current = getValue
   const {
     activeCell,
@@ -47,67 +46,58 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
     onFill: (activeCell, fillSelection) => {
       if (!fillSelection) return
       const { bounds } = fillSelection
-      const changes = {}
-      const previousChanges = {}
+      const changes: Record<string, string> = {}
       const value = getValueRef.current(activeCell)
       for (let i = bounds.top; i <= bounds.bottom; i++) {
         for (let j = bounds.left; j <= bounds.right; j++) {
-          changes[[i, j]] = value
-          previousChanges[[i, j]] = getValue({ rowIndex: i, columnIndex: j })
+          changes[pos2str([i, j])] = value
         }
       }
     },
   })
-  const handleUndo = (patches) => {
-    const { path, value } = patches
-    const [key] = path
-    if (key === 'data') {
-      const [_, { rowIndex, columnIndex }] = path
-      const changes = {
-        [[rowIndex, columnIndex]]: value,
-      }
-      setActiveCell({ rowIndex, columnIndex })
-    }
 
-    if (key === 'range') {
-      const [_, cell] = path
-      setActiveCell(cell)
-    }
-  }
-  const {
-    undo,
-    redo,
-    add: addToUndoStack,
-    canUndo,
-    canRedo,
-    ...undoProps
-  } = useUndo({
-    onUndo: handleUndo,
-    onRedo: handleUndo,
-  })
+  const selectionArea = useMemo(() => {
+    type Acc = { rows: number[]; cols: number[] }
+    return selections.reduce(
+      (acc: Acc, { bounds }) => {
+        for (let i = bounds.left; i <= bounds.right; i++) {
+          acc.cols.push(i)
+        }
+        for (let i = bounds.top; i <= bounds.bottom; i++) {
+          acc.rows.push(i)
+        }
+        return acc
+      },
+      { rows: [], cols: [] }
+    )
+  }, [selections])
+
   // @ts-ignore
   useCopyPaste({
     gridRef,
     selections,
     activeCell,
     getValue,
-    onPaste: (rows, { rowIndex, columnIndex }) => {
+    onPaste: (rows, pos) => {
+      if (!pos) return
+      const { rowIndex, columnIndex } = pos
       const endRowIndex = Math.max(rowIndex, rowIndex + rows.length - 1)
       const endColumnIndex = Math.max(
         columnIndex,
         columnIndex + (rows.length && rows[0].length - 1)
       )
-      const changes = {}
       for (const [i, row] of rows.entries()) {
         for (const [j, cell] of row.entries()) {
-          if (typeof cell !== 'object') {
-            const text = cell
-              .replace(/\n/g, '')
-              .replace(/\r/g, '')
-              .replace(/ /g, '')
-            changes[[rowIndex + i, columnIndex + j]] = text
-          } else if (cell.text !== undefined) {
-            changes[[rowIndex + i, columnIndex + j]] = cell.text
+          if (cell) {
+            if (typeof cell !== 'object') {
+              const text = cell
+                .replace(/\n/g, '')
+                .replace(/\r/g, '')
+                .replace(/ /g, '')
+              setCellValue([rowIndex + i, columnIndex + j], text)
+            } else if (cell.text !== undefined) {
+              setCellValue([rowIndex + i, columnIndex + j], cell.text)
+            }
           }
         }
       }
@@ -128,65 +118,78 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
     },
     onCut: (selection) => {
       const { bounds } = selection
-      const changes = {}
       for (let i = bounds.top; i <= bounds.bottom; i++) {
         for (let j = bounds.left; j <= bounds.right; j++) {
-          changes[[i, j]] = undefined
+          setCellValue([i, j], '')
         }
       }
     },
   })
 
-  // @ts-ignore
-  const { editorComponent, isEditInProgress, ...editableProps } = useEditable({
-    gridRef,
-    getValue,
-    selections,
-    activeCell,
-    onDelete: (activeCell, selections) => {
-      /**
-       * It can be a range of just one cell
-       */
-      if (selections.length) {
-        const newValues = selections.reduce((acc, { bounds }) => {
-          for (let i = bounds.top; i <= bounds.bottom; i++) {
-            for (let j = bounds.left; j <= bounds.right; j++) {
-              if (
-                getValueRef.current({ rowIndex: i, columnIndex: j }) !==
-                undefined
-              ) {
-                acc[[i, j]] = ''
+  const { editorComponent, isEditInProgress, onDoubleClick, ...editableProps } =
+    // @ts-ignore
+    useEditable({
+      gridRef,
+      getValue,
+      selections,
+      activeCell,
+      canEdit: ({ rowIndex, columnIndex }) => {
+        return rowIndex > 0 && columnIndex > 0
+      },
+      onDelete: (activeCell, selections) => {
+        /**
+         * It can be a range of just one cell
+         */
+        if (selections.length) {
+          const newValues = selections.reduce((acc, { bounds }) => {
+            for (let i = bounds.top; i <= bounds.bottom; i++) {
+              for (let j = bounds.left; j <= bounds.right; j++) {
+                if (
+                  getValueRef.current({ rowIndex: i, columnIndex: j }) !==
+                  undefined
+                ) {
+                  setCellValue([i, j], '')
+                }
+              }
+            }
+            return acc
+          }, {})
+          gridRef.current.resetAfterIndices(
+            {
+              rowIndex: selections[0].bounds.top,
+              columnIndex: selections[0].bounds.left,
+            },
+            false
+          )
+        } else {
+          gridRef.current.resetAfterIndices(activeCell)
+        }
+      },
+      onSubmit: (value, cell, nextActiveCell) => {
+        const { rowIndex, columnIndex } = cell
+        if (selections.length) {
+          for (const selection of selections) {
+            const { bounds } = selection
+            for (let i = bounds.top; i <= bounds.bottom; i++) {
+              for (let j = bounds.left; j <= bounds.right; j++) {
+                setCellValue([i, j], value)
               }
             }
           }
-          return acc
-        }, {})
-        gridRef.current.resetAfterIndices(
-          {
-            rowIndex: selections[0].bounds.top,
-            columnIndex: selections[0].bounds.left,
-          },
-          false
-        )
-      } else {
-        gridRef.current.resetAfterIndices(activeCell)
-      }
-    },
-    // TODO nextActiveCell has no rowindex...
-    onSubmit: (value, cell, nextActiveCell) => {
-      const { rowIndex, columnIndex } = cell
-      setCellValue(cell, value)
+        } else {
+          setCellValue(cell, value)
+        }
 
-      if (gridRef.current) {
-        gridRef.current.resetAfterIndices({ rowIndex, columnIndex }, false)
-      }
-      //
-      ///* Select the next cell */
-      if (nextActiveCell?.rowIndex && nextActiveCell?.columnIndex) {
-        setActiveCell(nextActiveCell)
-      }
-    },
-  })
+        if (gridRef.current) {
+          gridRef.current.resetAfterIndices({ rowIndex, columnIndex }, false)
+        }
+        //
+        ///* Select the next cell */
+        if (nextActiveCell?.rowIndex && nextActiveCell?.columnIndex) {
+          setActiveCell(nextActiveCell)
+        }
+      },
+    })
   // @ts-ignore
   const autoSizerProps = useSizer({
     gridRef,
@@ -195,18 +198,6 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
     rowCount,
     minColumnWidth: 100,
   })
-  const selectionArea = selections.reduce(
-    (acc, { bounds }) => {
-      for (let i = bounds.left; i <= bounds.right; i++) {
-        acc.cols.push(i)
-      }
-      for (let i = bounds.top; i <= bounds.bottom; i++) {
-        acc.rows.push(i)
-      }
-      return acc
-    },
-    { rows: [], cols: [] }
-  )
   const frozenColumns = 1
   const frozenRows = 1
   return (
@@ -257,7 +248,7 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
               />
             )
           }
-          const value = data[[props.rowIndex, props.columnIndex]]
+          const value = data[pos2str([props.rowIndex, props.columnIndex])]
           return (
             <Cell
               value={value}
@@ -271,10 +262,11 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
         frozenColumns={frozenColumns}
         frozenRows={frozenRows}
         {...selectionProps}
-        {...editableProps}
         {...autoSizerProps}
+        onDoubleClick={onDoubleClick}
         columnWidth={(columnIndex) => {
           if (columnIndex === 0) return 46
+          if (!autoSizerProps.columnWidth) return 46
           return autoSizerProps.columnWidth(columnIndex)
         }}
         onMouseDown={(...args) => {
@@ -284,7 +276,6 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
         onKeyDown={(...args) => {
           selectionProps.onKeyDown(...args)
           editableProps.onKeyDown(...args)
-          undoProps.onKeyDown(...args)
         }}
       />
       {editorComponent}

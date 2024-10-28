@@ -14,7 +14,7 @@ export default function Header(props: RendererProps) {
     ? ''
     : columnHeader
       ? (rowIndex as number)
-      : (number2Alpha(columnIndex - 1).toUpperCase() as string as string)
+      : number2Alpha(columnIndex - 1).toUpperCase()
 
   const fill = isActive ? '#E9EAED' : '#F8F9FA'
 

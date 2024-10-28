@@ -1,7 +1,8 @@
 import type { CellInterface } from '@rowsncolumns/grid'
 // @ts-nocheck
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import Sheet from './components/Sheet'
+import type { Pos } from './type'
 
 const sheet = {
   name: 'Sheet 1',
@@ -15,12 +16,16 @@ const sheet = {
 }
 export default function App() {
   const [cells, setCells] = useState(sheet.cells)
-  const setCellValue = (position: CellInterface, value: number | string) => {
-    const key = `${position.rowIndex},${position.columnIndex}`
+
+  const setCellValue = useCallback((position: Pos, value: number | string) => {
+    const key = Array.isArray(position)
+      ? `${position[0]},${position[1]}`
+      : `${position.rowIndex},${position.columnIndex}`
     setCells((prev) => ({
       ...prev,
       [key]: value,
     }))
-  }
+  }, [])
+
   return <Sheet data={cells} setCellValue={setCellValue} />
 }
