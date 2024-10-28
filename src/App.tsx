@@ -1,4 +1,3 @@
-import type { CellInterface } from '@rowsncolumns/grid'
 // @ts-nocheck
 import { useCallback, useState } from 'react'
 import Sheet from './components/Sheet'
