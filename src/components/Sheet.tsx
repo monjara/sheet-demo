@@ -45,8 +45,10 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
     columnCount,
     onFill: (activeCell, fillSelection) => {
       if (!fillSelection) return
+      if (!getValueRef.current) return
       const { bounds } = fillSelection
       const changes: Record<string, string> = {}
+
       const value = getValueRef.current(activeCell)
       for (let i = bounds.top; i <= bounds.bottom; i++) {
         for (let j = bounds.left; j <= bounds.right; j++) {
@@ -95,7 +97,9 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
                 .replace(/\r/g, '')
                 .replace(/ /g, '')
               setCellValue([rowIndex + i, columnIndex + j], text)
+              // @ts-ignore
             } else if (cell.text !== undefined) {
+              // @ts-ignore
               setCellValue([rowIndex + i, columnIndex + j], cell.text)
             }
           }
@@ -141,12 +145,13 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
          * It can be a range of just one cell
          */
         if (selections.length) {
-          const newValues = selections.reduce((acc, { bounds }) => {
+          selections.reduce((acc, { bounds }) => {
             for (let i = bounds.top; i <= bounds.bottom; i++) {
               for (let j = bounds.left; j <= bounds.right; j++) {
                 if (
+                  getValueRef?.current &&
                   getValueRef.current({ rowIndex: i, columnIndex: j }) !==
-                  undefined
+                    undefined
                 ) {
                   setCellValue([i, j], '')
                 }
@@ -154,15 +159,28 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
             }
             return acc
           }, {})
-          gridRef.current.resetAfterIndices(
-            {
-              rowIndex: selections[0].bounds.top,
-              columnIndex: selections[0].bounds.left,
-            },
-            false
-          )
+          if (gridRef.current) {
+            gridRef.current.resetAfterIndices(
+              {
+                rowIndex: selections[0].bounds.top,
+                columnIndex: selections[0].bounds.left,
+              },
+              false
+            )
+          }
+          if (gridRef.current) {
+            gridRef.current.resetAfterIndices(
+              {
+                rowIndex: selections[0].bounds.top,
+                columnIndex: selections[0].bounds.left,
+              },
+              false
+            )
+          }
         } else {
-          gridRef.current.resetAfterIndices(activeCell)
+          if (gridRef.current) {
+            gridRef.current.resetAfterIndices(activeCell)
+          }
         }
       },
       onSubmit: (value, cell, nextActiveCell) => {
@@ -251,7 +269,7 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
           const value = data[pos2str([props.rowIndex, props.columnIndex])]
           return (
             <Cell
-              value={value}
+              value={value as string}
               fill='white'
               stroke='#ccc'
               {...props}

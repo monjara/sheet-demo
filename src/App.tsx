@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useCallback, useState } from 'react'
 import Sheet from './components/Sheet'
 import type { Pos } from './type'
