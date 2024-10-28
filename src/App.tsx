@@ -1,27 +1,26 @@
-import './App.css'
-import { Link, Navigate, Outlet, useLocation } from 'react-router-dom'
+import type { CellInterface } from '@rowsncolumns/grid'
+// @ts-nocheck
+import { useState } from 'react'
+import Sheet from './components/Sheet'
 
-function App() {
-  const routes = [{ to: 'rows_columns', label: 'RowsColumns' }]
-  const location = useLocation()
-  if (location.pathname === '/') {
-    return <Navigate to={`${routes[0].to}`} replace />
-  }
-
-  return (
-    <div className='app'>
-      <div className='side_bar'>
-        {routes.map((route) => (
-          <Link key={route.to} to={route.to}>
-            {route.label}
-          </Link>
-        ))}
-      </div>
-      <div>
-        <Outlet />
-      </div>
-    </div>
-  )
+const sheet = {
+  name: 'Sheet 1',
+  cells: {
+    '1,1': 'Hello',
+    '1,2': 'World',
+    '1,3': '=SUM(2,2)',
+    '1,4': '=SUM(B2, 4)',
+    '2,2': 10,
+  },
 }
-
-export default App
+export default function App() {
+  const [cells, setCells] = useState(sheet.cells)
+  const setCellValue = (position: CellInterface, value: number | string) => {
+    const key = `${position.rowIndex},${position.columnIndex}`
+    setCells((prev) => ({
+      ...prev,
+      [key]: value,
+    }))
+  }
+  return <Sheet data={cells} setCellValue={setCellValue} />
+}
