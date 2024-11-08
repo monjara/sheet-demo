@@ -1,6 +1,6 @@
+import DataCells from '@/components/data-cells'
+import type { Pos } from '@/type'
 import { useState } from 'react'
-import Sheet from '../../components/Sheet'
-import type { Pos } from '../../type'
 
 const sheet = {
   name: 'Sheet 1',
@@ -12,16 +12,17 @@ const sheet = {
     '2,2': 10,
   },
 }
-export default function RowColumnsGrid() {
-  const [cells, setCells] = useState(sheet.cells)
+export default function Preview() {
+  const [data, setData] = useState(sheet.cells)
   const setCellValue = (position: Pos, value: number | string) => {
     const key = Array.isArray(position)
       ? `${position[0]},${position[1]}`
       : `${position.rowIndex},${position.columnIndex}`
-    setCells((prev) => ({
+    setData((prev) => ({
       ...prev,
       [key]: value,
     }))
   }
-  return <Sheet data={cells} setCellValue={setCellValue} />
+
+  return <DataCells data={data} setCellValue={setCellValue} />
 }

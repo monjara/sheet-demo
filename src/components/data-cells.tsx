@@ -1,3 +1,6 @@
+import useResizer from '@/hooks/useResizer'
+import type { Pos } from '@/type'
+import { pos2str } from '@/utils'
 import {
   Cell,
   Grid,
@@ -8,17 +11,17 @@ import {
   useSizer,
 } from '@rowsncolumns/grid'
 import { useCallback, useMemo, useRef } from 'react'
-import useResizer from '../hooks/useResizer'
-import type { Pos } from '../type'
-import { pos2str } from '../utils'
-import Header from './Header'
+import SheetHeader from './sheet-header'
 
 type SheetProps = {
   data: Record<string, string | number>
   setCellValue: (position: Pos, value: string | number) => void
 }
-export default function Sheet({ data, setCellValue }: SheetProps) {
-  const { width, height } = useResizer()
+export default function DataCells({ data, setCellValue }: SheetProps) {
+  const { width, height } = useResizer({
+    width: window.innerWidth - window.innerWidth * 0.3,
+    height: window.innerHeight - 80,
+  })
   const gridRef = useRef<GridRef>(null)
   const rowCount = 1000
   const columnCount = 1000
@@ -242,7 +245,7 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
         itemRenderer={(props) => {
           if (props.rowIndex < frozenRows) {
             return (
-              <Header
+              <SheetHeader
                 {...props}
                 key={props.key}
                 isActive={
@@ -255,7 +258,7 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
           }
           if (props.columnIndex < frozenColumns) {
             return (
-              <Header
+              <SheetHeader
                 {...props}
                 key={props.key}
                 columnHeader

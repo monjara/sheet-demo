@@ -1,13 +1,13 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
-import App from './App.tsx'
+import Preview from './features/grid/Preview.tsx'
 
 const router = createBrowserRouter(
   [
     {
       path: '/',
-      element: <App />,
+      element: <Preview />,
     },
   ],
   {

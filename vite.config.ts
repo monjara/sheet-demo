@@ -5,4 +5,9 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => ({
   base: mode === 'production' ? '/sheet-demo' : '/',
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@/': '/src/',
+    },
+  },
 }))

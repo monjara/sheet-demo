@@ -7,7 +7,7 @@ function number2Alpha(i: number): string {
   )
 }
 
-export default function Header(props: RendererProps) {
+export default function SheetHeader(props: RendererProps) {
   const { rowIndex, columnIndex, columnHeader, isActive } = props
   const isCorner = rowIndex === columnIndex
   const text = isCorner
