@@ -17,7 +17,7 @@ type SheetProps = {
   data: Record<string, string | number>
   setCellValue: (position: Pos, value: string | number) => void
 }
-export default function DataCells({ data, setCellValue }: SheetProps) {
+export default function Sheet({ data, setCellValue }: SheetProps) {
   const { width, height } = useResizer({
     width: window.innerWidth - window.innerWidth * 0.3,
     height: window.innerHeight - 80,

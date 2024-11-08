@@ -1,4 +1,4 @@
-import DataCells from '@/components/data-cells'
+import Sheet from '@/components/sheet'
 import type { Pos } from '@/type'
 import { useState } from 'react'
 
@@ -24,5 +24,5 @@ export default function Preview() {
     }))
   }
 
-  return <DataCells data={data} setCellValue={setCellValue} />
+  return <Sheet data={data} setCellValue={setCellValue} />
 }
