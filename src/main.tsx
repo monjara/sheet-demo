@@ -1,13 +1,20 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
-import Preview from './features/grid/Preview.tsx'
+import Preview from './features/grid/preview'
+import Layout from './features/wrapper/layout'
 
 const router = createBrowserRouter(
   [
     {
       path: '/',
-      element: <Preview />,
+      element: <Layout />,
+      children: [
+        {
+          path: '/preview',
+          element: <Preview />,
+        },
+      ],
     },
   ],
   {

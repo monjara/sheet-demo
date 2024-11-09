@@ -1,28 +1,48 @@
+import type { CellInfo } from '@/components/cell'
 import Sheet from '@/components/sheet'
+import testData from '@/data.json'
 import type { Pos } from '@/type'
 import { useState } from 'react'
+import styles from './preview.module.css'
 
-const sheet = {
-  name: 'Sheet 1',
-  cells: {
-    '1,1': 'Hello',
-    '1,2': 'World',
-    '1,3': '=SUM(2,2)',
-    '1,4': '=SUM(B2, 4)',
-    '2,2': 10,
-  },
-}
 export default function Preview() {
-  const [data, setData] = useState(sheet.cells)
-  const setCellValue = (position: Pos, value: number | string) => {
+  const [data, setData] = useState(() => {
+    const properties = Object.keys(testData[0])
+
+    const result: Record<string, CellInfo> = {}
+    for (let i = 1; i <= properties.length; i++) {
+      result[`${i},1`] = {
+        value: properties[i - 1],
+        fill: '#338aff',
+        textColor: '#fff',
+      }
+    }
+    for (let i = 2; i <= testData.length + 1; i++) {
+      const row = testData[i - 2]
+      for (let j = 1; j <= properties.length; j++) {
+        // @ts-ignore
+        result[`${j},${i}`] = { value: row[properties[j - 1]] }
+      }
+    }
+    return result
+  })
+
+  const setCellValue = (position: Pos, value: string) => {
     const key = Array.isArray(position)
       ? `${position[0]},${position[1]}`
       : `${position.rowIndex},${position.columnIndex}`
     setData((prev) => ({
       ...prev,
-      [key]: value,
+      [key]: {
+        ...prev[key],
+        value,
+      },
     }))
   }
 
-  return <Sheet data={data} setCellValue={setCellValue} />
+  return (
+    <div className={styles.container}>
+      <Sheet data={data} setCellValue={setCellValue} />
+    </div>
+  )
 }

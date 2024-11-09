@@ -2,7 +2,6 @@ import useResizer from '@/hooks/useResizer'
 import type { Pos } from '@/type'
 import { pos2str } from '@/utils'
 import {
-  Cell,
   Grid,
   type GridRef,
   useCopyPaste,
@@ -11,12 +10,14 @@ import {
   useSizer,
 } from '@rowsncolumns/grid'
 import { useCallback, useMemo, useRef } from 'react'
-import SheetHeader from './sheet-header'
+import Cell, { type CellInfo } from './cell'
+import Selection from './selection'
 
 type SheetProps = {
-  data: Record<string, string | number>
-  setCellValue: (position: Pos, value: string | number) => void
+  data: Record<string, CellInfo>
+  setCellValue: (position: Pos, value: string) => void
 }
+
 export default function Sheet({ data, setCellValue }: SheetProps) {
   const { width, height } = useResizer({
     width: window.innerWidth - window.innerWidth * 0.3,
@@ -27,8 +28,7 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
   const columnCount = 1000
   const getValue = useCallback(
     ({ rowIndex, columnIndex }: { rowIndex: number; columnIndex: number }) => {
-      // @ts-ignore
-      return data[[rowIndex, columnIndex]]
+      return data[`${rowIndex},${columnIndex}`]?.value ?? ''
     },
     [data]
   )
@@ -40,12 +40,22 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
     setActiveCell,
     setSelections,
     newSelection,
+    /** unused */
+    draggedSelection,
+    appendSelection,
+    isDragging,
+    initialDraggedSelection,
+    clearLastSelection,
+    setActiveCellState,
+    modifySelection,
+    selectAll,
+    clearSelections,
     ...selectionProps
-    // @ts-ignore
   } = useSelection({
     gridRef,
     rowCount,
     columnCount,
+    getValue,
     onFill: (activeCell, fillSelection) => {
       if (!fillSelection) return
       if (!getValueRef.current) return
@@ -61,35 +71,22 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
     },
   })
 
-  const selectionArea = useMemo(() => {
-    type Acc = { rows: number[]; cols: number[] }
-    return selections.reduce(
-      (acc: Acc, { bounds }) => {
-        for (let i = bounds.left; i <= bounds.right; i++) {
-          acc.cols.push(i)
-        }
-        for (let i = bounds.top; i <= bounds.bottom; i++) {
-          acc.rows.push(i)
-        }
-        return acc
-      },
-      { rows: [], cols: [] }
-    )
-  }, [selections])
-
-  // @ts-ignore
   useCopyPaste({
     gridRef,
     selections,
     activeCell,
     getValue,
+    getText: (cell) => {
+      return getValue(cell)
+    },
     onPaste: (rows, pos) => {
       if (!pos) return
       const { rowIndex, columnIndex } = pos
-      const endRowIndex = Math.max(rowIndex, rowIndex + rows.length - 1)
+      const rowsSize = rows.length
+      const endRowIndex = Math.max(rowIndex, rowIndex + rowsSize - 1)
       const endColumnIndex = Math.max(
         columnIndex,
-        columnIndex + (rows.length && rows[0].length - 1)
+        columnIndex + (rowsSize && rows[0].length - 1)
       )
       for (const [i, row] of rows.entries()) {
         for (const [j, cell] of row.entries()) {
@@ -100,8 +97,8 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
                 .replace(/\r/g, '')
                 .replace(/ /g, '')
               setCellValue([rowIndex + i, columnIndex + j], text)
-              // @ts-ignore
-            } else if (cell.text !== undefined) {
+              // @ts-ignore todo
+            } else if (cell.text) {
               // @ts-ignore
               setCellValue([rowIndex + i, columnIndex + j], cell.text)
             }
@@ -132,21 +129,37 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
       }
     },
   })
+  const selectionArea = useMemo(() => {
+    type Acc = { rows: number[]; cols: number[] }
+    return selections.reduce(
+      (acc: Acc, { bounds }) => {
+        for (let i = bounds.left; i <= bounds.right; i++) {
+          acc.cols.push(i)
+        }
+        for (let i = bounds.top; i <= bounds.bottom; i++) {
+          acc.rows.push(i)
+        }
+        return acc
+      },
+      { rows: [], cols: [] }
+    )
+  }, [selections])
 
   const { editorComponent, isEditInProgress, onDoubleClick, ...editableProps } =
-    // @ts-ignore
     useEditable({
       gridRef,
       getValue,
       selections,
       activeCell,
+      columnCount,
+      rowCount,
+      isHiddenRow: () => false,
+      isHiddenColumn: () => false,
+      onKeyDown: (_) => {},
       canEdit: ({ rowIndex, columnIndex }) => {
         return rowIndex > 0 && columnIndex > 0
       },
       onDelete: (activeCell, selections) => {
-        /**
-         * It can be a range of just one cell
-         */
         if (selections.length) {
           selections.reduce((acc, { bounds }) => {
             for (let i = bounds.top; i <= bounds.bottom; i++) {
@@ -187,6 +200,7 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
         }
       },
       onSubmit: (value, cell, nextActiveCell) => {
+        console.log('value: ', value)
         const { rowIndex, columnIndex } = cell
         if (selections.length) {
           for (const selection of selections) {
@@ -211,13 +225,17 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
         }
       },
     })
-  // @ts-ignore
-  const autoSizerProps = useSizer({
+  const { getTextMetrics, getColumnWidth, ...autoSizerProps } = useSizer({
     gridRef,
     getValue,
     resizeStrategy: 'full',
     rowCount,
     minColumnWidth: 100,
+    isHiddenColumn: () => false,
+    isHiddenRow: () => false,
+    getText: (cell) => {
+      return getValue(cell)
+    },
   })
   const frozenColumns = 1
   const frozenRows = 1
@@ -231,7 +249,8 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
       }}
     >
       <Grid
-        // snap
+        {...selectionProps}
+        {...autoSizerProps}
         showFillHandle={!isEditInProgress}
         activeCell={activeCell}
         width={width}
@@ -242,48 +261,17 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
         rowCount={rowCount}
         rowHeight={() => 22}
         scrollThrottleTimeout={50}
-        itemRenderer={(props) => {
-          if (props.rowIndex < frozenRows) {
-            return (
-              <SheetHeader
-                {...props}
-                key={props.key}
-                isActive={
-                  (activeCell &&
-                    activeCell.columnIndex === props.columnIndex) ||
-                  selectionArea.cols.includes(props.columnIndex)
-                }
-              />
-            )
-          }
-          if (props.columnIndex < frozenColumns) {
-            return (
-              <SheetHeader
-                {...props}
-                key={props.key}
-                columnHeader
-                isActive={
-                  (activeCell && activeCell.rowIndex === props.rowIndex) ||
-                  selectionArea.rows.includes(props.rowIndex)
-                }
-              />
-            )
-          }
-          const value = data[pos2str([props.rowIndex, props.columnIndex])]
-          return (
-            <Cell
-              value={value as string}
-              fill='white'
-              stroke='#ccc'
-              {...props}
-              key={props.key}
-            />
-          )
-        }}
+        selectionRenderer={Selection}
+        itemRenderer={(props) => (
+          <Cell
+            {...props}
+            key={props.key}
+            data={data}
+            selectionArea={selectionArea}
+          />
+        )}
         frozenColumns={frozenColumns}
         frozenRows={frozenRows}
-        {...selectionProps}
-        {...autoSizerProps}
         onDoubleClick={onDoubleClick}
         columnWidth={(columnIndex) => {
           if (columnIndex === 0) return 46
