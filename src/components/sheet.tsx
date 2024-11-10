@@ -16,13 +16,16 @@ import Selection from './selection'
 type SheetProps = {
   data: Record<string, CellInfo>
   setCellValue: (position: Pos, value: string) => void
+  width: number
+  height: number
 }
 
-export default function Sheet({ data, setCellValue }: SheetProps) {
-  const { width, height } = useResizer({
-    width: window.innerWidth - window.innerWidth * 0.3,
-    height: window.innerHeight - 80,
-  })
+export default function Sheet({
+  data,
+  setCellValue,
+  width,
+  height,
+}: SheetProps) {
   const gridRef = useRef<GridRef>(null)
   const rowCount = 1000
   const columnCount = 1000
@@ -200,7 +203,6 @@ export default function Sheet({ data, setCellValue }: SheetProps) {
         }
       },
       onSubmit: (value, cell, nextActiveCell) => {
-        console.log('value: ', value)
         const { rowIndex, columnIndex } = cell
         if (selections.length) {
           for (const selection of selections) {
