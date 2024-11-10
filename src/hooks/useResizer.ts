@@ -9,18 +9,10 @@ export default function useResizer({
   const [height, setHeight] = useState(h)
 
   useEffect(() => {
-    setWidth(
-      multiple
-        ? window.innerWidth * 0.35
-        : window.innerWidth - window.innerWidth * 0.3
-    )
+    setWidth(multiple ? window.innerWidth * 0.35 : window.innerWidth * 0.75)
 
     const handler = () => {
-      setWidth(
-        multiple
-          ? window.innerWidth * 0.35
-          : window.innerWidth - window.innerWidth * 0.3
-      )
+      setWidth(multiple ? window.innerWidth * 0.35 : window.innerWidth * 0.75)
       setHeight(h)
     }
     window.addEventListener('resize', handler)

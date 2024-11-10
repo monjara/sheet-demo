@@ -4,7 +4,6 @@
 }
 
 .side_bar {
-  width: 20%;
   height: 100%;
   background-color: #f0f0f0;
   position: fixed;
@@ -15,6 +14,40 @@
   padding-top: 20px;
 }
 
+.wide_side_bar {
+  width: 20%;
+  max-width: 200px;
+  transition: 0.3s;
+}
+
+.thin_side_bar {
+  width: 5%;
+  min-width: 50px;
+  transition: 0.3s;
+}
+
+.text_button {
+  border: none;
+  background-color: inherit;
+  padding: 14px 28px;
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-block;
+  width: 100%;
+  text-align: left;
+}
+
+.text_button:hover {
+  background: #ddd;
+  transition: 0.3s;
+}
+
 .content {
-  margin-left: 23%;
+  margin-left: 220px;
+  transition: 0.3s;
+}
+
+.thin_content {
+  margin-left: 70px;
+  transition: 0.3s;
 }

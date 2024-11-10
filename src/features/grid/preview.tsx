@@ -29,6 +29,7 @@ export default function Preview() {
     }
     return result
   })
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const setCellValue = (position: Pos, value: string) => {
     const key = Array.isArray(position)
@@ -44,9 +45,7 @@ export default function Preview() {
   }
 
   const sheetWidth =
-    grid > 1
-      ? window.innerWidth * 0.35
-      : window.innerWidth - window.innerWidth * 0.3
+    grid > 1 ? window.innerWidth * 0.35 : window.innerWidth * 0.75
   const sheetHeight = window.innerHeight - 80
 
   const { width, height } = useResizer({
@@ -55,17 +54,17 @@ export default function Preview() {
     multiple: grid > 1,
   })
 
+  const onClickButton = () => {
+    setGrid((g) => (g > 1 ? g - 1 : g + 1))
+  }
+
   return (
-    <div className={styles.container}>
-      {grid > 1 ? (
-        <button type='button' onClick={() => setGrid((g) => g - 1)}>
-          remove grid
+    <div className={styles.container} ref={containerRef}>
+      <div className={styles.button_area}>
+        <button type='button' onClick={onClickButton}>
+          {grid > 1 ? 'remove grid' : 'add grid'}
         </button>
-      ) : (
-        <button type='button' onClick={() => setGrid((g) => g + 1)}>
-          add grid
-        </button>
-      )}
+      </div>
 
       <div className={styles.grid_area}>
         {Array.from({ length: grid }).map((_, i) => (

@@ -7,8 +7,13 @@
   gap: 10px;
 }
 
+.button_area {
+  margin-left: auto;
+}
+
 .grid_area {
   display: flex;
   flex-direction: row;
   gap: 10px;
+  transition: all 0.5s;
 }
