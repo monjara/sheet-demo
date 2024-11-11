@@ -1,4 +1,3 @@
-import useResizer from '@/hooks/useResizer'
 import type { Pos } from '@/type'
 import { pos2str } from '@/utils'
 import {

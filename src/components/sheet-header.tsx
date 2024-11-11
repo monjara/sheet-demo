@@ -2,10 +2,12 @@ import { Cell, type RendererProps } from '@rowsncolumns/grid'
 import { memo } from 'react'
 
 function number2Alpha(i: number): string {
-  return (
-    (i >= 26 ? number2Alpha(((i / 26) >> 0) - 1) : '') +
-    'abcdefghijklmnopqrstuvwxyz'[(i % 26) >> 0]
-  )
+  let result = ''
+  while (i >= 0) {
+    result = 'abcdefghijklmnopqrstuvwxyz'[i % 26] + result
+    i = ((i / 26) >> 0) - 1
+  }
+  return result
 }
 
 export default memo(function SheetHeader(props: RendererProps) {
