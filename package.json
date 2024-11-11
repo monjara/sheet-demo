@@ -14,8 +14,10 @@
   "dependencies": {
     "@faker-js/faker": "^9.0.3",
     "@rowsncolumns/grid": "^9.0.4",
+    "konva": "^9.3.16",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-konva": "^18.2.10",
     "react-router-dom": "^6.27.0",
     "zustand": "^5.0.0"
   },

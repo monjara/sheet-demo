@@ -3,7 +3,7 @@ import Sheet from '@/components/sheet'
 import testData from '@/data.json'
 import useResizer from '@/hooks/useResizer'
 import type { Pos } from '@/type'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import styles from './preview.module.css'
 
 export default function Preview() {

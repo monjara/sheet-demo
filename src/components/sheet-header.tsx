@@ -1,7 +1,8 @@
 import { Cell, type RendererProps } from '@rowsncolumns/grid'
 import { memo } from 'react'
 
-function number2Alpha(i: number): string {
+function number2Alpha(num: number): string {
+  let i = num
   let result = ''
   while (i >= 0) {
     result = 'abcdefghijklmnopqrstuvwxyz'[i % 26] + result
