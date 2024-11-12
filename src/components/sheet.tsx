@@ -8,7 +8,7 @@ import {
   useSelection,
   useSizer,
 } from '@rowsncolumns/grid'
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 import Cell, { type CellInfo } from './cell'
 import Selection from './selection'
 
@@ -29,9 +29,9 @@ type getTextProps = {
 
 export default function Sheet({
   data,
-  setCellValue,
   width,
   height,
+  setCellValue,
 }: SheetProps) {
   const gridRef = useRef<GridRef>(null)
   const rowCount = 1000
@@ -60,6 +60,7 @@ export default function Sheet({
     modifySelection,
     selectAll,
     clearSelections,
+    onSelectionMouseDown,
     ...selectionProps
   } = useSelection({
     gridRef,
@@ -139,21 +140,6 @@ export default function Sheet({
       }
     },
   })
-  const selectionArea = useMemo(() => {
-    type Acc = { rows: number[]; cols: number[] }
-    return selections.reduce(
-      (acc: Acc, { bounds }) => {
-        for (let i = bounds.left; i <= bounds.right; i++) {
-          acc.cols.push(i)
-        }
-        for (let i = bounds.top; i <= bounds.bottom; i++) {
-          acc.rows.push(i)
-        }
-        return acc
-      },
-      { rows: [], cols: [] }
-    )
-  }, [selections])
 
   const { editorComponent, isEditInProgress, onDoubleClick, ...editableProps } =
     useEditable({
@@ -234,10 +220,13 @@ export default function Sheet({
         }
       },
     })
+  //
+  // TODO: resize
   const { getTextMetrics, getColumnWidth, ...autoSizerProps } = useSizer({
+    autoResize: true,
     gridRef,
-    getValue,
-    resizeStrategy: 'full',
+    getValue: getValueRef.current,
+    resizeStrategy: 'lazy',
     rowCount,
     minColumnWidth: 100,
     isHiddenColumn: () => false,
@@ -274,9 +263,10 @@ export default function Sheet({
         itemRenderer={(props) => (
           <Cell
             {...props}
-            key={props.key}
+            key={`${props.rowIndex}-${props.columnIndex}`}
             data={data}
-            selectionArea={selectionArea}
+            activeCell={activeCell}
+            selections={selections}
           />
         )}
         frozenColumns={frozenColumns}

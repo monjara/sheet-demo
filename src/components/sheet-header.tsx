@@ -11,7 +11,13 @@ function number2Alpha(num: number): string {
   return result
 }
 
-export default memo(function SheetHeader(props: RendererProps) {
+type Props = RendererProps & {
+  isActive: boolean
+  columnHeader?: boolean
+}
+
+// TODO: another canvas
+const SheetHeader = memo<Props>(function SheetHeader(props) {
   const { rowIndex, columnIndex, columnHeader, isActive } = props
   const isCorner = rowIndex === columnIndex
   const text = isCorner
@@ -24,7 +30,7 @@ export default memo(function SheetHeader(props: RendererProps) {
 
   return (
     <Cell
-      key={props.key}
+      key={`${rowIndex}_${columnIndex}`}
       width={props.width}
       height={props.height}
       x={props.x}
@@ -38,3 +44,5 @@ export default memo(function SheetHeader(props: RendererProps) {
     />
   )
 })
+
+export default SheetHeader

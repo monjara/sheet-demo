@@ -1,28 +1,64 @@
 import { pos2str } from '@/utils'
-import { Cell as GridCell, type RendererProps } from '@rowsncolumns/grid'
+import {
+  type CellInterface,
+  Cell as GridCell,
+  type RendererProps,
+  type SelectionArea,
+} from '@rowsncolumns/grid'
 import { memo } from 'react'
 import SheetHeader from './sheet-header'
+
 export type CellInfo = {
   value: string
   fill?: string
   textColor?: string
 }
 
-type Props = RendererProps & {
-  data: Record<string, CellInfo>
+function isInColumnSelection(
+  activeCell: CellInterface | null,
+  selections: SelectionArea[],
+  columnIndex: number
+) {
+  return (
+    (activeCell && activeCell.columnIndex === columnIndex) ||
+    selections.some(
+      (selection) =>
+        selection.bounds.left <= columnIndex &&
+        selection.bounds.right >= columnIndex
+    )
+  )
 }
 
-export default memo(function Cell(props: Props) {
+function isInRowSelection(
+  activeCell: CellInterface | null,
+  selections: SelectionArea[],
+  rowIndex: number
+) {
+  return (
+    (activeCell && activeCell.rowIndex === rowIndex) ||
+    selections.some(
+      (selection) =>
+        selection.bounds.top <= rowIndex && selection.bounds.bottom >= rowIndex
+    )
+  )
+}
+
+type Props = RendererProps & {
+  activeCell: CellInterface | null
+  data: Record<string, CellInfo>
+  selections: SelectionArea[]
+}
+const Cell = memo<Props>(function Cell(props) {
   if (props.rowIndex < 1) {
     return (
       <SheetHeader
         {...props}
-        key={props.key}
-        isActive={
-          (props.activeCell &&
-            props.activeCell.columnIndex === props.columnIndex) ||
-          props.selectionArea.cols.includes(props.columnIndex)
-        }
+        key={`${props.rowIndex}_${props.columnIndex}`}
+        isActive={isInColumnSelection(
+          props.activeCell,
+          props.selections,
+          props.columnIndex
+        )}
       />
     )
   }
@@ -30,12 +66,15 @@ export default memo(function Cell(props: Props) {
     return (
       <SheetHeader
         {...props}
-        key={props.key}
+        key={`${props.rowIndex}_${props.columnIndex}`}
         columnHeader
-        isActive={
-          (props.activeCell && props.activeCell.rowIndex === props.rowIndex) ||
-          props.selectionArea.rows.includes(props.rowIndex)
-        }
+        isActive={isInRowSelection(
+          props.activeCell,
+          props.selections,
+          props.rowIndex
+        )}
+        rowIndex={props.rowIndex}
+        columnIndex={props.columnIndex}
       />
     )
   }
@@ -43,7 +82,7 @@ export default memo(function Cell(props: Props) {
   return (
     <GridCell
       {...props}
-      key={props.key}
+      key={`${props.rowIndex}_${props.columnIndex}`}
       value={cell?.value}
       fill={cell?.fill ?? '#fff'}
       textColor={cell?.textColor ?? '#000'}
@@ -51,3 +90,5 @@ export default memo(function Cell(props: Props) {
     />
   )
 })
+
+export default Cell
