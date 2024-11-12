@@ -5,9 +5,6 @@ import styles from './layout.module.css'
 export default function Layout() {
   const [isWide, setIsWide] = useState(true)
   const location = useLocation()
-  if (location.pathname === '/') {
-    return <Navigate to='/preview' replace />
-  }
 
   useEffect(() => {
     const handler = () => {
@@ -19,10 +16,16 @@ export default function Layout() {
     }
   }, [])
 
+  if (location.pathname === '/') {
+    return <Navigate to='/preview' replace />
+  }
+
   return (
     <div className={styles.container}>
       <div
-        className={`${styles.side_bar} ${isWide ? styles.wide_side_bar : styles.thin_side_bar}`}
+        className={`${styles.side_bar} ${
+          isWide ? styles.wide_side_bar : styles.thin_side_bar
+        }`}
       >
         {isWide ? (
           <button
