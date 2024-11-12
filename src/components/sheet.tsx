@@ -19,6 +19,14 @@ type SheetProps = {
   height: number
 }
 
+type getTextProps = {
+  text: string
+  sourceCell: {
+    rowIndex: number
+    columnIndex: number
+  }
+}
+
 export default function Sheet({
   data,
   setCellValue,
@@ -78,8 +86,8 @@ export default function Sheet({
     selections,
     activeCell,
     getValue,
-    getText: (cell) => {
-      return getValue(cell)
+    getText: (config: getTextProps) => {
+      return config.text
     },
     onPaste: (rows, pos) => {
       if (!pos) return
@@ -234,8 +242,8 @@ export default function Sheet({
     minColumnWidth: 100,
     isHiddenColumn: () => false,
     isHiddenRow: () => false,
-    getText: (cell) => {
-      return getValue(cell)
+    getText: (config: getTextProps) => {
+      return config.text
     },
   })
   const frozenColumns = 1
