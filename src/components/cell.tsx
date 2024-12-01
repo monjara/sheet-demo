@@ -1,4 +1,3 @@
-import { pos2str } from '@/utils'
 import {
   type CellInterface,
   Cell as GridCell,
@@ -45,7 +44,7 @@ function isInRowSelection(
 
 type Props = RendererProps & {
   activeCell: CellInterface | null
-  data: Record<string, CellInfo>
+  data?: CellInfo
   selections: SelectionArea[]
 }
 const Cell = memo<Props>(function Cell(props) {
@@ -78,14 +77,13 @@ const Cell = memo<Props>(function Cell(props) {
       />
     )
   }
-  const cell = props.data[pos2str([props.rowIndex, props.columnIndex])]
   return (
     <GridCell
       {...props}
       key={`${props.rowIndex}_${props.columnIndex}`}
-      value={cell?.value}
-      fill={cell?.fill ?? '#fff'}
-      textColor={cell?.textColor ?? '#000'}
+      value={props.data?.value}
+      fill={props.data?.fill ?? '#fff'}
+      textColor={props.data?.textColor ?? '#000'}
       stroke='#ccc'
     />
   )

@@ -265,7 +265,7 @@ export default function Sheet({
           <Cell
             {...props}
             key={`${props.rowIndex}-${props.columnIndex}`}
-            data={data}
+            data={data[pos2str([props.rowIndex, props.columnIndex])]}
             activeCell={activeCell}
             selections={selections}
           />
