@@ -4,6 +4,7 @@ import {
   type RendererProps,
   type SelectionArea,
 } from '@rowsncolumns/grid'
+import type { KonvaEventObject } from 'konva/lib/Node'
 import { memo } from 'react'
 import SheetHeader from './sheet-header'
 
@@ -46,6 +47,7 @@ type Props = RendererProps & {
   activeCell: CellInterface | null
   data?: CellInfo
   selections: SelectionArea[]
+  toggleContext: (e: KonvaEventObject<MouseEvent>) => void
 }
 const Cell = memo<Props>(function Cell(props) {
   if (props.rowIndex < 1) {
@@ -58,6 +60,7 @@ const Cell = memo<Props>(function Cell(props) {
           props.selections,
           props.columnIndex
         )}
+        toggleContext={props.toggleContext}
       />
     )
   }
@@ -74,6 +77,7 @@ const Cell = memo<Props>(function Cell(props) {
         )}
         rowIndex={props.rowIndex}
         columnIndex={props.columnIndex}
+        toggleContext={props.toggleContext}
       />
     )
   }

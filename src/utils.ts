@@ -6,3 +6,13 @@ export function pos2str(
   }
   return `${pos.rowIndex},${pos.columnIndex}`
 }
+
+export function number2Alpha(num: number): string {
+  let i = num
+  let result = ''
+  while (i >= 0) {
+    result = 'abcdefghijklmnopqrstuvwxyz'[i % 26] + result
+    i = ((i / 26) >> 0) - 1
+  }
+  return result
+}

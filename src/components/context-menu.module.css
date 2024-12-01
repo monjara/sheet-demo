@@ -1,0 +1,26 @@
+.menu {
+  width: 100px;
+  position: absolute;
+  background-color: white;
+  z-index: 100;
+  border-radius: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border: 1px solid #fefefe;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.menu_row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 10px;
+  width: 100%;
+  background-color: white;
+  border: none;
+  display: block;
+}
+
+.menu_row:hover {
+  background-color: #f0f0f0;
+}

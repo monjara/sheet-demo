@@ -8,9 +8,13 @@ import {
   useSelection,
   useSizer,
 } from '@rowsncolumns/grid'
-import { useCallback, useRef } from 'react'
+import type { KonvaEventObject } from 'konva/lib/Node'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import Cell, { type CellInfo } from './cell'
+import ContextMenu from './context-menu'
 import Selection from './selection'
+import styles from './sheet.module.css'
 
 type SheetProps = {
   data: Record<string, CellInfo>
@@ -33,6 +37,12 @@ export default function Sheet({
   height,
   setCellValue,
 }: SheetProps) {
+  const [menuContext, setMenuContext] = useState({
+    show: false,
+    position: { x: 0, y: 0 },
+  })
+  const menuRef = useRef<HTMLDivElement | null>(null)
+
   const gridRef = useRef<GridRef>(null)
   const rowCount = 1000
   const columnCount = 1000
@@ -42,6 +52,15 @@ export default function Sheet({
     },
     [data]
   )
+
+  const toggleMenu = (e: KonvaEventObject<MouseEvent>) => {
+    console.log('e: ', e)
+    setMenuContext((old) => ({
+      show: !old.show,
+      position: { x: e.evt.clientX, y: e.evt.clientY },
+    }))
+  }
+
   const getValueRef = useRef<typeof getValue | null>(null)
   getValueRef.current = getValue
   const {
@@ -239,14 +258,7 @@ export default function Sheet({
   const frozenColumns = 1
   const frozenRows = 1
   return (
-    <div
-      style={{
-        flex: 1,
-        minWidth: 0,
-        position: 'relative',
-        top: 0,
-      }}
-    >
+    <div className={styles.container}>
       <Grid
         {...selectionProps}
         {...autoSizerProps}
@@ -268,14 +280,15 @@ export default function Sheet({
             data={data[pos2str([props.rowIndex, props.columnIndex])]}
             activeCell={activeCell}
             selections={selections}
+            toggleContext={toggleMenu}
           />
         )}
         frozenColumns={frozenColumns}
         frozenRows={frozenRows}
         onDoubleClick={onDoubleClick}
         columnWidth={(columnIndex) => {
-          if (columnIndex === 0) return 46
-          if (!autoSizerProps.columnWidth) return 46
+          if (columnIndex === 0) return 52
+          if (!autoSizerProps.columnWidth) return 52
           return autoSizerProps.columnWidth(columnIndex)
         }}
         onMouseDown={(e) => {
@@ -294,6 +307,13 @@ export default function Sheet({
         }}
       />
       {editorComponent}
+      {menuContext.show &&
+        createPortal(
+          <div ref={menuRef}>
+            <ContextMenu position={menuContext.position} />
+          </div>,
+          document.getElementById('root') as HTMLDivElement
+        )}
     </div>
   )
 }
