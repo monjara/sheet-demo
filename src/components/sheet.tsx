@@ -9,7 +9,7 @@ import {
   useSizer,
 } from '@rowsncolumns/grid'
 import type { KonvaEventObject } from 'konva/lib/Node'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import Cell, { type CellInfo } from './cell'
 import ContextMenu from './context-menu'
@@ -40,6 +40,7 @@ export default function Sheet({
   const [menuContext, setMenuContext] = useState({
     show: false,
     position: { x: 0, y: 0 },
+    cell: { rowIndex: 0, columnIndex: 0 },
   })
   const menuRef = useRef<HTMLDivElement | null>(null)
 
@@ -52,14 +53,6 @@ export default function Sheet({
     },
     [data]
   )
-
-  const toggleMenu = (e: KonvaEventObject<MouseEvent>) => {
-    console.log('e: ', e)
-    setMenuContext((old) => ({
-      show: !old.show,
-      position: { x: e.evt.clientX, y: e.evt.clientY },
-    }))
-  }
 
   const getValueRef = useRef<typeof getValue | null>(null)
   getValueRef.current = getValue
@@ -103,7 +96,7 @@ export default function Sheet({
     },
   })
 
-  useCopyPaste({
+  const { copy, cut, paste } = useCopyPaste({
     gridRef,
     selections,
     activeCell,
@@ -255,6 +248,49 @@ export default function Sheet({
       return config.text
     },
   })
+
+  const toggleMenu = (
+    e: KonvaEventObject<MouseEvent>,
+    {
+      rowIndex,
+      columnIndex,
+    }: {
+      rowIndex: number
+      columnIndex: number
+    }
+  ) => {
+    if (rowIndex === 0) {
+      setActiveCell({ rowIndex: rowIndex + 1, columnIndex })
+      setSelections([
+        {
+          bounds: {
+            top: rowIndex + 1,
+            left: columnIndex,
+            bottom: rowCount,
+            right: columnIndex,
+          },
+        },
+      ])
+    } else {
+      setActiveCell({ rowIndex, columnIndex: columnIndex + 1 })
+      setSelections([
+        {
+          bounds: {
+            top: rowIndex,
+            left: columnIndex + 1,
+            bottom: rowIndex,
+            right: columnCount,
+          },
+        },
+      ])
+    }
+    setMenuContext((old) => ({
+      show: !old.show,
+      position: { x: e.evt.clientX, y: e.evt.clientY },
+      cell: { rowIndex, columnIndex },
+    }))
+  }
+
   const frozenColumns = 1
   const frozenRows = 1
   return (
@@ -310,7 +346,15 @@ export default function Sheet({
       {menuContext.show &&
         createPortal(
           <div ref={menuRef}>
-            <ContextMenu position={menuContext.position} />
+            <ContextMenu
+              selections={selections}
+              data={data}
+              position={menuContext.position}
+              copy={copy}
+              paste={paste}
+              cut={cut}
+              close={() => setMenuContext((old) => ({ ...old, show: false }))}
+            />
           </div>,
           document.getElementById('root') as HTMLDivElement
         )}

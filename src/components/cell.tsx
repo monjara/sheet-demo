@@ -47,7 +47,16 @@ type Props = RendererProps & {
   activeCell: CellInterface | null
   data?: CellInfo
   selections: SelectionArea[]
-  toggleContext: (e: KonvaEventObject<MouseEvent>) => void
+  toggleContext: (
+    e: KonvaEventObject<MouseEvent>,
+    {
+      rowIndex,
+      columnIndex,
+    }: {
+      rowIndex: number
+      columnIndex: number
+    }
+  ) => void
 }
 const Cell = memo<Props>(function Cell(props) {
   if (props.rowIndex < 1) {

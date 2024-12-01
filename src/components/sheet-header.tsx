@@ -9,7 +9,16 @@ import KonvaImage from './konva-image'
 type Props = RendererProps & {
   isActive: boolean
   columnHeader?: boolean
-  toggleContext: (e: KonvaEventObject<MouseEvent>) => void
+  toggleContext: (
+    e: KonvaEventObject<MouseEvent>,
+    {
+      rowIndex,
+      columnIndex,
+    }: {
+      rowIndex: number
+      columnIndex: number
+    }
+  ) => void
 }
 // TODO: another canvas
 const SheetHeader = memo<Props>(function SheetHeader(props) {
@@ -25,7 +34,10 @@ const SheetHeader = memo<Props>(function SheetHeader(props) {
 
   const onClick = (e: KonvaEventObject<MouseEvent>) => {
     console.log('clicked e: ', e)
-    props.toggleContext(e)
+    props.toggleContext(e, {
+      rowIndex: props.rowIndex,
+      columnIndex: props.columnIndex,
+    })
   }
 
   return (
