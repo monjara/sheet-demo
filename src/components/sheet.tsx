@@ -67,6 +67,8 @@ export default function Sheet({
     rowCount,
     columnCount,
     getValue,
+    selectionTopBound: 1,
+    selectionLeftBound: 1,
     onFill: (activeCell, fillSelection) => {
       if (!fillSelection) return
       if (!getValueRef.current) return
@@ -151,7 +153,6 @@ export default function Sheet({
       rowCount,
       isHiddenRow: () => false,
       isHiddenColumn: () => false,
-      onKeyDown: (_) => {},
       canEdit: ({ rowIndex, columnIndex }) => {
         return rowIndex > 0 && columnIndex > 0
       },
@@ -277,13 +278,19 @@ export default function Sheet({
           if (!autoSizerProps.columnWidth) return 46
           return autoSizerProps.columnWidth(columnIndex)
         }}
-        onMouseDown={(...args) => {
-          selectionProps.onMouseDown(...args)
-          editableProps.onMouseDown(...args)
+        onMouseDown={(e) => {
+          selectionProps.onMouseDown(e)
+          editableProps.onMouseDown(e)
         }}
-        onKeyDown={(...args) => {
-          selectionProps.onKeyDown(...args)
-          editableProps.onKeyDown(...args)
+        onKeyDown={(e) => {
+          if (e.nativeEvent.key === 'Eisu') {
+            return
+          }
+          if (e.nativeEvent.key === 'KanjiMode') {
+            return
+          }
+          selectionProps.onKeyDown(e)
+          editableProps.onKeyDown(e)
         }}
       />
       {editorComponent}
